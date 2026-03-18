@@ -88,7 +88,7 @@ public abstract class BinarySearchTreeBase<TKey, TValue, TNode>(IComparer<TKey>?
         if (node == null) { return false; }
 
         RemoveNode(node);
-        OnNodeRemoved(node, node.Parent); // хз сработает ли
+        OnNodeRemoved(node.Parent, node); 
         this.Count--;
         return true;
     }
