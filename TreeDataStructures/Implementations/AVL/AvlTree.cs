@@ -13,21 +13,27 @@ public class AvlTree<TKey, TValue> : BinarySearchTreeBase<TKey, TValue, AvlNode<
     protected override void OnNodeAdded(AvlNode<TKey, TValue> newNode)
     {
         ArgumentNullException.ThrowIfNull(newNode);
-        AvlNode<TKey, TValue> node;
-        if (newNode.Parent != null)
+        AvlNode<TKey, TValue> ?node = newNode.Parent;
+        while (node != null)
         {
-            node = newNode.Parent;
-        } else
-        {
-            node = newNode; 
-        }
+            var parent = node.Parent;
+            var root = Balance(node);
 
-        while (node.Parent != null)
-        {
-            node.Height = UpdateHeight(node);
-            Balance(node);
-            node = node.Parent;
-        }        
+            if (root != node)
+            {
+                if (parent == null)
+                {
+                    Root = root;
+                } else if (parent.Left == node)
+                {
+                    parent.Left = root;
+                } else
+                {
+                    parent.Right = root;
+                }
+            }
+            node = parent;
+        }     
     } 
 
     private int UpdateHeight(AvlNode<TKey, TValue> node)
@@ -50,36 +56,48 @@ public class AvlTree<TKey, TValue> : BinarySearchTreeBase<TKey, TValue, AvlNode<
         return node == null ? 0 : CountBalanceFactor(node);
     }
 
-    private void Balance(AvlNode<TKey, TValue> node)
+    private AvlNode<TKey, TValue> Balance(AvlNode<TKey, TValue> node)
     {
-        if (GetBalanceFactor(node) < -1) // перекос вправо
+        int balanceFactor = GetBalanceFactor(node);
+        if (balanceFactor < -1) // перекос влево
         {
-            if (GetBalanceFactor(node?.Left) <= 0)
+            if (GetBalanceFactor(node.Left) > 0)
             {
-                RotateRight(node);
-                UpdateHeight(node);
-                UpdateHeight(node.Left);
+                node.Left = RotateLeftAvl(node.Left);
+                return RotateRightAvl(node);
             } else
             {
-                RotateBigRight(node);
-                UpdateHeight(node);
-                UpdateHeight(node.Left);
-                UpdateHeight(node.Right);
+                return RotateRightAvl(node);       
             }
-        } else if (GetBalanceFactor(node) > 1) // перекос влево
+        } else if (balanceFactor > 1) // перекос вправо
         {
-            if (GetBalanceFactor(node.Right) > 0)
+            if (GetBalanceFactor(node.Right) < 0)
             {
-                RotateBigLeft(node);
-                UpdateHeight(node);
-                UpdateHeight(node.Left);
-                UpdateHeight(node.Right);
+                node.Right = RotateRightAvl(node.Right);
+                return RotateLeftAvl(node);
             } else
             {
-                RotateLeft(node);
-                UpdateHeight(node);
-                UpdateHeight(node.Right);
+                return RotateLeftAvl(node);
             }
         }
+        return node;
+    }
+    private AvlNode<TKey, TValue> RotateRightAvl(AvlNode<TKey, TValue> node)
+    {
+        AvlNode<TKey, TValue> left = node.Left ?? throw new InvalidOperationException("cannot rotate!");
+        RotateRight(node);
+        UpdateHeight(node);
+        UpdateHeight(left);
+        return left;
+    }
+
+    private AvlNode<TKey, TValue> RotateLeftAvl(AvlNode<TKey, TValue> node)
+    {
+        AvlNode<TKey, TValue> right = node.Right ?? throw new InvalidOperationException("cannot rotate!");
+        RotateLeft(node);
+        UpdateHeight(node);
+        UpdateHeight(right);
+        return right;
     }
 }
+

@@ -11,17 +11,68 @@ public class SplayTree<TKey, TValue> : BinarySearchTree<TKey, TValue>
     
     protected override void OnNodeAdded(BstNode<TKey, TValue> newNode)
     {
-        throw new NotImplementedException();
+        Splay(newNode);
     }
     
     protected override void OnNodeRemoved(BstNode<TKey, TValue>? parent, BstNode<TKey, TValue>? child)
     {
-        throw new NotImplementedException();
+        if (parent != null)
+            Splay(parent);
     }
     
     public override bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value)
     {
-        throw new NotImplementedException();
+        var node = FindNode(key); // базовый поиск (без splay)
+        if (node != null)
+        {
+            value = node.Value;
+            Splay(node);          // поднимаем узел к корню
+            return true;
+        }
+        value = default;
+        return false;       
     }
-    
+
+    private void Splay(BstNode<TKey, TValue> node)
+    {
+        while (node.Parent != null)
+        {
+            BstNode<TKey, TValue> parent = node.Parent;
+            BstNode<TKey, TValue> ?grandparent = node.Parent.Parent;
+
+            if (grandparent == null)
+            {
+                if (node.IsLeftChild)
+                {
+                    RotateRight(parent);
+                } else
+                {
+                    RotateLeft(parent);
+                }
+            } else if (node.IsLeftChild)
+            {
+                if (parent.IsRightChild)
+                {
+                   RotateRight(parent);
+                   RotateLeft(grandparent); 
+                } else
+                {
+                    RotateRight(grandparent);
+                    RotateRight(parent);
+                }
+            } else if (node.IsRightChild)
+            {
+                if (parent.IsRightChild)
+                {
+                    RotateLeft(grandparent);
+                    RotateLeft(parent);
+                } else
+                {
+                    RotateLeft(parent);
+                    RotateRight(grandparent);
+                }
+            }
+            
+        }
+    }    
 }
