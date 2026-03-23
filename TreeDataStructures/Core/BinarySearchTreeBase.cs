@@ -261,7 +261,7 @@ public abstract class BinarySearchTreeBase<TKey, TValue, TNode>(IComparer<TKey>?
             RotateRight(x.Right);
         } else
         {
-            throw new NullReferenceException();
+            throw new InvalidOperationException();
         }
         RotateLeft(x);
     }
