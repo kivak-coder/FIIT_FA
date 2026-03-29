@@ -22,11 +22,11 @@ public class SplayTree<TKey, TValue> : BinarySearchTree<TKey, TValue>
     
     public override bool TryGetValue(TKey key, [MaybeNullWhen(false)] out TValue value)
     {
-        var node = FindNode(key); // базовый поиск (без splay)
+        var node = FindNode(key); 
         if (node != null)
         {
             value = node.Value;
-            Splay(node);          // поднимаем узел к корню
+            Splay(node);          
             return true;
         }
         value = default;
@@ -57,22 +57,30 @@ public class SplayTree<TKey, TValue> : BinarySearchTree<TKey, TValue>
                    RotateLeft(grandparent); 
                 } else
                 {
-                    RotateRight(grandparent);
-                    RotateRight(parent);
+                    RotateDoubleRight(parent);
                 }
             } else if (node.IsRightChild)
             {
                 if (parent.IsRightChild)
                 {
-                    RotateLeft(grandparent);
-                    RotateLeft(parent);
+                    RotateDoubleLeft(parent);
                 } else
                 {
                     RotateLeft(parent);
                     RotateRight(grandparent);
                 }
-            }
-            
+            } 
         }
-    }    
+    }
+
+    public override bool ContainsKey(TKey key)
+    {
+        var node = FindNode(key); 
+        if (node != null)
+        {
+            Splay(node);          
+            return true;
+        }
+        return false;    
+    }
 }
