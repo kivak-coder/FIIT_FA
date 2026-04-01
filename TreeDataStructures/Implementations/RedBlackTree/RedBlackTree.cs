@@ -1,4 +1,5 @@
-﻿using TreeDataStructures.Core;
+﻿using System.Globalization;
+using TreeDataStructures.Core;
 
 namespace TreeDataStructures.Implementations.RedBlackTree;
 
@@ -7,83 +8,194 @@ public class RedBlackTree<TKey, TValue> : BinarySearchTreeBase<TKey, TValue, RbN
 {
     protected override RbNode<TKey, TValue> CreateNode(TKey key, TValue value)
     {
-        throw new NotImplementedException();
+        return new(key, value);
     }
     
-    protected override void OnNodeAdded(RbNode<TKey, TValue> newNode)
-    {
-        FixRedBlack(newNode);
-    }
     protected override void OnNodeRemoved(RbNode<TKey, TValue>? parent, RbNode<TKey, TValue>? child)
     {
-        throw new NotImplementedException();
-    }
-
-    private void FixRedBlack(RbNode<TKey, TValue> node)
-    {
-        if (node == Root)
+        if (GetColor(child) == RbColor.Black)
         {
-            node.Color = RbColor.Black;
-            return;
-        }
-        while (node.Parent.Color == RbColor.Red)
-        {
-            if (node.Parent.IsLeftChild)
+            while (GetColor(child) == RbColor.Black && child != Root)
             {
-                if (Uncle(node).Color == RbColor.Red)
+               bool isLeft;
+               if (child != null)
                 {
-                    node.Parent.Color = RbColor.Black;
-                    Uncle(node).Color = RbColor.Black; // не работает по идее
-                    grandparent(node).Color = RbColor.Red;
-                    node = grandparent(node);
+                    isLeft = child.IsLeftChild;
+                } else if (parent != null)
+                {
+                    if (parent.Left == null) // мб не совсем верно
+                    {
+                        isLeft = false;
+                    } else
+                    {
+                        isLeft = true;
+                    }
                 } else
                 {
-                    if (node.IsRightChild)
+                    break;
+                }
+                
+                if (isLeft)
+                {
+                    var sibling = parent?.Right; // а нужна ли отдельная функция для нахождения?
+                    if (GetColor(sibling) == RbColor.Red)
                     {
-                        node = node.Parent;
-                        RotateLeft(node);
+                        SetColor(sibling, RbColor.Black);
+                        SetColor(parent, RbColor.Red);
+                        RotateLeft(parent);
+                        sibling = parent?.Right;
                     }
-                    node.Parent.Color = RbColor.Black;
-                    grandparent(node).Color = RbColor.Red;
-                    RotateRight(grandparent(node)); 
+                    if (GetColor(sibling?.Right) == RbColor.Black && GetColor(sibling?.Left) == RbColor.Black && GetColor(sibling) == RbColor.Black)
+                    {
+                        SetColor(sibling, RbColor.Red);
+                        child = parent;
+                        parent = child?.Parent;
+                        continue;
+                    }
+                    if (GetColor(sibling) == RbColor.Black && GetColor(sibling?.Right) == RbColor.Black)
+                    {
+                        SetColor(sibling?.Left, RbColor.Black);
+                        SetColor(sibling, RbColor.Red);
+                        RotateRight(sibling);
+                        sibling = parent?.Right;
+                    }
+                    SetColor(sibling, GetColor(parent));
+                    SetColor(parent, RbColor.Black);
+                    SetColor(sibling?.Right, RbColor.Black);
+                    RotateLeft(parent);
+                    child = Root;
+                } else
+                {
+                    var sibling = parent?.Left;
+                    if (GetColor(sibling) == RbColor.Red)
+                    {
+                        SetColor(sibling, RbColor.Black);
+                        SetColor(parent, RbColor.Red);
+                        RotateRight(parent);
+                        sibling = parent?.Left;
+                    }
+                    if (GetColor(sibling?.Right) == RbColor.Black && GetColor(sibling?.Left) == RbColor.Black && GetColor(sibling) == RbColor.Black)
+                    {
+                        SetColor(sibling, RbColor.Red);
+                        child = parent;
+                        parent = child?.Parent;
+                        continue;
+                    }
+                    if (GetColor(sibling) == RbColor.Black && GetColor(sibling?.Left) == RbColor.Black)
+                    {
+                        SetColor(sibling?.Right, RbColor.Black);
+                        SetColor(sibling, RbColor.Red);
+                        RotateLeft(sibling);
+                        sibling = parent?.Left;
+                    }
+                    SetColor(sibling, GetColor(parent));
+                    SetColor(parent, RbColor.Black);
+                    SetColor(sibling?.Left, RbColor.Black);
+                    RotateRight(parent);
+                    child = Root;
+                }
+            }
+            SetColor(child, RbColor.Black);
+            SetColor(Root, RbColor.Black);
+        }
+    }
+
+    protected override void OnNodeAdded(RbNode<TKey, TValue> newNode)
+    {
+        if (newNode == Root)
+        {
+            SetColor(newNode, RbColor.Black);
+            return;
+        }
+        while (GetColor(newNode.Parent) == RbColor.Red)
+        {
+            var uncle = Uncle(newNode);
+            var parent = newNode.Parent;
+            var grandparent = Grandparent(newNode);
+            if (grandparent == null) break;
+
+            if (newNode.Parent.IsLeftChild)
+            {
+                if (GetColor(uncle) == RbColor.Red)
+                {
+                    SetColor(parent, RbColor.Black);
+                    SetColor(uncle, RbColor.Black); 
+                    SetColor(grandparent, RbColor.Red);
+                    newNode = grandparent;
+                } else
+                {
+                    if (newNode.IsRightChild)
+                    {
+                        newNode = parent;
+                        RotateLeft(newNode);
+                        parent = newNode.Parent;
+                        grandparent = Grandparent(newNode);
+                    }
+                    SetColor(parent, RbColor.Black);
+                    if (grandparent != null)
+                    {
+                        SetColor(grandparent, RbColor.Red);
+                        RotateRight(grandparent);  
+                    }
                 }
             } else
             {
-                if (Uncle(node).Color == RbColor.Red)
+                if (GetColor(uncle) == RbColor.Red)
                 {
-                    node.Parent.Color = RbColor.Black;
-                    Uncle(node).Color = RbColor.Black;
-                    grandparent(node).Color = RbColor.Red;
-                    node = grandparent(node);
+                    SetColor(parent, RbColor.Black);
+                    SetColor(uncle, RbColor.Black);
+                    SetColor(grandparent, RbColor.Red);
+                    newNode = grandparent;
                 } else
                 {
-                    if (node.IsLeftChild)
+                    if (newNode.IsLeftChild)
                     {
-                        node = node.Parent;
-                        RotateRight(node);
+                        newNode = parent;
+                        RotateRight(newNode);
+                        parent = newNode.Parent;
+                        grandparent = Grandparent(newNode);
                     }
-                    node.Parent.Color = RbColor.Black;
-                    grandparent(node).Color = RbColor.Red;
-                    RotateLeft(grandparent(node));
+                    SetColor(parent, RbColor.Black);
+                    if (grandparent != null)
+                    {
+                        SetColor(grandparent, RbColor.Red);
+                        RotateLeft(grandparent);  
+                    }
                 }
             }
         }
-        Root.Color = RbColor.Black;
+        SetColor(Root, RbColor.Black);
     }
 
-    private static RbNode<TKey, TValue> Uncle(RbNode<TKey, TValue> node)
+    private static RbNode<TKey, TValue>? Uncle(RbNode<TKey, TValue> node)
     {
-        if (node.Parent.IsLeftChild)
+        var grand = Grandparent(node); 
+        if (grand == null) return null;
+        return node.Parent.IsLeftChild ? grand.Right : grand.Left;
+    }
+
+    private static RbNode<TKey, TValue>? Grandparent(RbNode<TKey, TValue> node)
+    {
+        return node.Parent?.Parent;
+    }
+
+    private static RbNode<TKey, TValue>? Sibling(RbNode<TKey, TValue> ?node)
+    {
+        if (node?.Parent == null) return null;
+        return node.IsLeftChild ? node.Parent?.Right : node.Parent?.Left;
+    }
+
+    private static void SetColor(RbNode<TKey, TValue> ?node, RbColor color)
+    {
+        if (node != null)
         {
-            return node.Parent.Parent.Right;
-        } else
-        {
-            return node.Parent.Parent.Left;
+            node.Color = color;
         }
     }
 
-    private static RbNode<TKey, TValue> grandparent(RbNode<TKey, TValue> node)
+    private static RbColor GetColor(RbNode<TKey, TValue> ?node)
     {
-        return node.Parent.Parent;
+        return node?.Color ?? RbColor.Black;
+
     }
 }
