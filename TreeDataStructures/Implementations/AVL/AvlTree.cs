@@ -2,7 +2,6 @@
 using TreeDataStructures.Core;
 
 namespace TreeDataStructures.Implementations.AVL;
-#nullable enable
 
 public class AvlTree<TKey, TValue> : BinarySearchTreeBase<TKey, TValue, AvlNode<TKey, TValue>>
     where TKey : IComparable<TKey>
@@ -58,6 +57,7 @@ public class AvlTree<TKey, TValue> : BinarySearchTreeBase<TKey, TValue, AvlNode<
 
     private AvlNode<TKey, TValue> Balance(AvlNode<TKey, TValue> node)
     {
+        ArgumentNullException.ThrowIfNull(node);
         int balanceFactor = GetBalanceFactor(node);
         if (balanceFactor < -1) // перекос влево
         {
@@ -67,7 +67,7 @@ public class AvlTree<TKey, TValue> : BinarySearchTreeBase<TKey, TValue, AvlNode<
                 return RotateRightAvl(node);
             } else
             {
-                return RotateRightAvl(node);       
+                return RotateRightAvl(node);          
             }
         } else if (balanceFactor > 1) // перекос вправо
         {
