@@ -44,10 +44,10 @@ public sealed class BetterBigInteger : IBigInteger
         if (radix > 32 || radix < 2) {throw new NotSupportedException();}
 
         _signBit = value[0] == '-' ? 1 : 0;
-        int finishIndex = value[0] == '-' ? 1: 0;
+        int startIndex = value[0] == '-' ? 1: 0;
         List<uint> digits = [0];
 
-        for (int i = value.Length - 1; i >= finishIndex; --i)
+        for (int i = startIndex; i < value.Length; i++)
         {
             digits = BigMultiplyInt(digits, radix);
             digits = BigAddInt(digits, FromChar(value[i]));
@@ -123,10 +123,12 @@ public sealed class BetterBigInteger : IBigInteger
         ulong temp = 0;    
         List<uint> result = [];
         bool negative;
+        int AsignBit = a.IsNegative == true ? -1 : 1;
+        int BsignBit = b.IsNegative == true ? -1 : 1;
 
-        if (a._signBit * b._signBit == 1)
+        if (AsignBit * BsignBit == 1)
         {
-            negative = a._signBit == 1;
+            negative = AsignBit == -1;
             for (int i = 0; i < len; ++i)
             {       
                 uint ADigit = i < ADigits.Length ? ADigits[i] : 0;
@@ -141,21 +143,21 @@ public sealed class BetterBigInteger : IBigInteger
                 result.Add((uint)temp);
             } 
         } else {
-            int sign = a > b ? a._signBit : b._signBit;
+            int sign = a > b ? AsignBit : BsignBit;
             negative = sign == 1;
             for (int i = 0; i < len; ++i)
             {       
                 uint ADigit = i < ADigits.Length ? ADigits[i] : 0;
                 uint BDigit = i < BDigits.Length ? BDigits[i] : 0;
 
-                temp = (ulong)(ADigit * a._signBit + BDigit * b._signBit + carry);
+                temp = (ulong)(ADigit * AsignBit + BDigit * BsignBit + carry);
 
                 if (temp >= Math.Pow(2, 32))
                 {
                     carry = 1;
                 } else {carry = 0;}
                 result.Add((uint)temp);
-            }
+            }  
         }
         
         return new BetterBigInteger(result.ToArray(), negative);
@@ -228,7 +230,8 @@ public sealed class BetterBigInteger : IBigInteger
 
     private static int FromChar(char c)
     {
-        return char.IsDigit(c) ? (c - '0') : (c - 'A');
+        Console.WriteLine(c);
+        return char.IsDigit(c) ? (c - '0') : (c - 'A' + 10);
     }
 
     private static List<uint> BigMultiplyInt(List<uint> digits, int num)
