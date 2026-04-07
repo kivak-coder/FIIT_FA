@@ -119,8 +119,8 @@ public sealed class BetterBigInteger : IBigInteger
         var ADigits = a.GetDigits();
         var BDigits = b.GetDigits();
         int len = Math.Max(ADigits.Length, BDigits.Length);
-        int carry = 0;
-        ulong temp = 0;    
+        ulong carry = 0;
+        ulong temp;    
         List<uint> result = [];
         bool negative;
         int AsignBit = a.IsNegative == true ? -1 : 1;
@@ -134,34 +134,65 @@ public sealed class BetterBigInteger : IBigInteger
                 uint ADigit = i < ADigits.Length ? ADigits[i] : 0;
                 uint BDigit = i < BDigits.Length ? BDigits[i] : 0;
 
-                temp = (ulong)(ADigit + BDigit + carry);
-
-                if (temp >= Math.Pow(2, 32))
-                {
-                    carry = 1;
-                } else {carry = 0;}
+                temp = (ulong)((ulong)ADigit + (ulong)BDigit + carry);
                 result.Add((uint)temp);
+                carry = temp >> 32;
             } 
+            if (carry != 0)
+            {
+                result.Add((uint)carry);
+            }
         } else {
-            int sign = a > b ? AsignBit : BsignBit;
-            negative = sign == 1;
+            int cmp = a.CompareAbs(b); // узнали кто больше по модулю
+            negative = FigureSign(cmp, AsignBit, BsignBit) == 1;
+            
             for (int i = 0; i < len; ++i)
             {       
-                uint ADigit = i < ADigits.Length ? ADigits[i] : 0;
-                uint BDigit = i < BDigits.Length ? BDigits[i] : 0;
+                long ADigit = (i < ADigits.Length ? ADigits[i] : 0);
+                long BDigit = (i < BDigits.Length ? BDigits[i] : 0);
 
-                temp = (ulong)(ADigit * AsignBit + BDigit * BsignBit + carry);
+                temp = (ulong)(ADigit * cmp + BDigit * b.CompareAbs(a) + (long)carry); // чо с эти сделать ептить ааааа
 
-                if (temp >= Math.Pow(2, 32))
-                {
-                    carry = 1;
-                } else {carry = 0;}
                 result.Add((uint)temp);
-            }  
+                carry = temp >> 32;
+            } 
+            if (carry != 0)   
+                result.Add((uint)carry);     
         }
-        
+
         return new BetterBigInteger(result.ToArray(), negative);
     }
+    private int CompareAbs(BetterBigInteger other) // работает!
+    {
+        if (_signBit == 0 && other._signBit == 1)
+        {
+            return CompareTo(-other);
+        }
+        if (_signBit == 1 && other._signBit == 0)
+        {
+            return (-this).CompareTo(other);
+        }
+        if (_signBit == 1 && other._signBit == 1)
+        {
+            return (-this).CompareTo(-other);
+        }
+        else 
+        {
+            return this.CompareTo(other);
+        } 
+    }
+
+    private static int FigureSign(int cmpAbs, int Asign, int Bsign)
+    {
+        if (cmpAbs == 1)  // a > b by modulo
+        {
+            return Asign == 1 ? 1 : 0;
+        } else
+        {
+            return Bsign == 1 ? 1 : 0;
+        }
+    }
+
     public static BetterBigInteger operator -(BetterBigInteger a, BetterBigInteger b)
     {
         return a + (-b);
