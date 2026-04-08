@@ -114,7 +114,7 @@ public sealed class BetterBigInteger : IBigInteger
     public override int GetHashCode() => throw new NotImplementedException();
     
     
-    public static BetterBigInteger operator +(BetterBigInteger a, BetterBigInteger b) // поправить для 0 и 1 (сайн бит)
+    public static BetterBigInteger operator +(BetterBigInteger a, BetterBigInteger b) 
     {
         var ADigits = a.GetDigits();
         var BDigits = b.GetDigits();
@@ -148,8 +148,8 @@ public sealed class BetterBigInteger : IBigInteger
             
             for (int i = 0; i < len; ++i)
             {       
-                long ADigit = (i < ADigits.Length ? ADigits[i] : 0);
-                long BDigit = (i < BDigits.Length ? BDigits[i] : 0);
+                long ADigit = i < ADigits.Length ? ADigits[i] : 0;
+                long BDigit = i < BDigits.Length ? BDigits[i] : 0;
 
                 temp = (ulong)(ADigit * cmp + BDigit * b.CompareAbs(a) + (long)carry); // чо с эти сделать ептить ааааа
 
@@ -206,8 +206,10 @@ public sealed class BetterBigInteger : IBigInteger
     public static BetterBigInteger operator %(BetterBigInteger a, BetterBigInteger b) => throw new NotImplementedException();
     
     
-    public static BetterBigInteger operator *(BetterBigInteger a, BetterBigInteger b)
-    => throw new NotImplementedException("Умножение делегируется стратегии, выбирать необходимо в зависимости от размеров чисел");
+    public static BetterBigInteger operator *(BetterBigInteger a, BetterBigInteger b) {
+        SimpleMultiplier mult = new();
+        return mult.Multiply(a, b);
+    }
     
     public static BetterBigInteger operator ~(BetterBigInteger a) => throw new NotImplementedException();
     public static BetterBigInteger operator &(BetterBigInteger a, BetterBigInteger b) => throw new NotImplementedException();
