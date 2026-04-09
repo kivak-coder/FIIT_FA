@@ -211,10 +211,71 @@ public sealed class BetterBigInteger : IBigInteger
         return mult.Multiply(a, b);
     }
     
-    public static BetterBigInteger operator ~(BetterBigInteger a) => throw new NotImplementedException();
-    public static BetterBigInteger operator &(BetterBigInteger a, BetterBigInteger b) => throw new NotImplementedException();
-    public static BetterBigInteger operator |(BetterBigInteger a, BetterBigInteger b) => throw new NotImplementedException();
-    public static BetterBigInteger operator ^(BetterBigInteger a, BetterBigInteger b) => throw new NotImplementedException();
+    public static BetterBigInteger operator ~(BetterBigInteger a) {
+        var ADigits = a.GetDigits();
+        uint[] result = new uint[ADigits.Length];
+        for (int i = 0; i < ADigits.Length; ++i)
+        {
+            result[i] = ~ADigits[i];
+        }
+        return new BetterBigInteger(result, false);
+    }
+
+    public static BetterBigInteger operator &(BetterBigInteger a, BetterBigInteger b) { // хренотень должна работать и с доп кодом тоже, говно
+        if (a.IsNegative || b.IsNegative)
+        {
+            throw new InvalidDataException();
+        }
+        var Adigits = a.GetDigits();
+        var BDigits = b.GetDigits();
+        // int Asign = a.IsNegative == true ? -1 : 1;
+        // int Bsign = b.IsNegative == true ? -1 : 1;
+        int ResLen = Math.Max(Adigits.Length, BDigits.Length);
+        uint[] result = new uint[ResLen];
+
+        for (int i = 0; i < ResLen; ++i)
+        {
+            var Adigit = i < Adigits.Length ? Adigits[i] : 0;
+            var Bdigit = i < BDigits.Length ? BDigits[i] : 0;
+            result[i] = (uint)(Adigit & Bdigit);
+        }
+        return new BetterBigInteger(result, false);
+    }
+
+    public static BetterBigInteger operator |(BetterBigInteger a, BetterBigInteger b) {
+        var Adigits = a.GetDigits();
+        var BDigits = b.GetDigits();
+        int Asign = a.IsNegative == true ? -1 : 1;
+        int Bsign = b.IsNegative == true ? -1 : 1;
+        int ResLen = Math.Max(Adigits.Length, BDigits.Length);
+        uint[] result = new uint[ResLen];
+
+        for (int i = 0; i < ResLen; ++i)
+        {
+            int Adigit = (int)(i < Adigits.Length ? Adigits[i] : 0);
+            int Bdigit = (int)(i < BDigits.Length ? BDigits[i] : 0);
+            result[i] = (uint)((Adigit * Asign) | (Bdigit * Bsign));
+        }
+        return new BetterBigInteger(result, false);   
+    }
+
+    public static BetterBigInteger operator ^(BetterBigInteger a, BetterBigInteger b) {
+         var Adigits = a.GetDigits();
+        var BDigits = b.GetDigits();
+        int Asign = a.IsNegative == true ? -1 : 1;
+        int Bsign = b.IsNegative == true ? -1 : 1;
+        int ResLen = Math.Max(Adigits.Length, BDigits.Length);
+        uint[] result = new uint[ResLen];
+
+        for (int i = 0; i < ResLen; ++i)
+        {
+            int Adigit = (int)(i < Adigits.Length ? Adigits[i] : 0);
+            int Bdigit = (int)(i < BDigits.Length ? BDigits[i] : 0);
+            result[i] = (uint)((Adigit * Asign) ^ (Bdigit * Bsign));
+        }
+        return new BetterBigInteger(result, false);
+    }
+
     public static BetterBigInteger operator <<(BetterBigInteger a, int shift) => throw new NotImplementedException();
     public static BetterBigInteger operator >> (BetterBigInteger a, int shift) => throw new NotImplementedException();
     
